@@ -7,6 +7,7 @@ import type { Direction } from './types';
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
 // Initialize game with easy preset
+let currentDifficulty = 'easy';
 let engine = new GameEngine(PRESET_CONFIGS.easy);
 let renderer = new Renderer(app);
 
@@ -30,33 +31,40 @@ function stopTimer() {
 }
 
 function handleReveal(row: number, col: number) {
-  const wasIdle = engine.getState().status === GameStatus.Idle;
+  const stateBefore = engine.getState().status;
   engine.reveal(row, col);
+  const state = engine.getState();
 
-  if (wasIdle && engine.getState().status === GameStatus.Playing) {
+  if (stateBefore === GameStatus.Idle && state.status === GameStatus.Playing) {
     startTimer();
   }
 
-  renderer.render(engine.getState());
+  renderer.render(state);
 
-  // Move cursor to revealed cell
-  engine.moveCursor('up' as Direction); // nudge then set directly — actually let's just move the playerPos
-  const state = engine.getState();
-
-  if (state.status === GameStatus.Won || state.status === GameStatus.Lost) {
+  if (state.status === GameStatus.Won) {
     stopTimer();
+    renderer.showWin(state.elapsedSeconds, currentDifficulty);
+    renderer.saveScore(state.elapsedSeconds, engine.getConfig(), currentDifficulty);
+    renderer.renderScores(currentDifficulty);
+  } else if (state.status === GameStatus.Lost) {
+    stopTimer();
+    renderer.showLoss();
   }
 }
 
 function handleFlag(row: number, col: number) {
+  const state = engine.getState();
+  if (state.status !== GameStatus.Playing && state.status !== GameStatus.Idle) return;
   engine.toggleFlag(row, col);
   renderer.render(engine.getState());
 }
 
-function newGame() {
+function newGame(difficulty?: string) {
   stopTimer();
-  const config = engine.getConfig();
+  currentDifficulty = difficulty ?? currentDifficulty;
+  const config = PRESET_CONFIGS[currentDifficulty] ?? PRESET_CONFIGS.easy;
   engine.newGame(config);
+  renderer.hideScores();
   renderer.render(engine.getState());
 }
 
@@ -76,7 +84,13 @@ renderer.getFaceBtn().addEventListener('click', () => {
   newGame();
 });
 
-// Keyboard input: WASD/arrows for cursor, Space/Enter to reveal, F to flag
+// Difficulty selector
+renderer.getDifficultySelector().addEventListener('change', (e) => {
+  const sel = e.target as HTMLSelectElement;
+  newGame(sel.value);
+});
+
+// Keyboard input
 const KEY_DIRECTION_MAP: Record<string, Direction> = {
   ArrowUp: 'up',
   ArrowDown: 'down',
@@ -86,7 +100,6 @@ const KEY_DIRECTION_MAP: Record<string, Direction> = {
   s: 'down',
   a: 'left',
   d: 'right',
-  // Diagonal
   q: 'up-left',
   e: 'up-right',
   z: 'down-left',
@@ -99,6 +112,16 @@ document.addEventListener('keydown', (e) => {
   // New game on R key
   if (e.key === 'r' || e.key === 'R') {
     newGame();
+    return;
+  }
+
+  // Toggle scores on H key
+  if (e.key === 'h' || e.key === 'H') {
+    if (renderer['scoresPanel'].style.display === 'none') {
+      renderer.renderScores(currentDifficulty);
+    } else {
+      renderer.hideScores();
+    }
     return;
   }
 
@@ -128,6 +151,11 @@ document.addEventListener('keydown', (e) => {
     handleFlag(pos.row, pos.col);
     return;
   }
+});
+
+// Handle window resize for responsive board
+window.addEventListener('resize', () => {
+  renderer.render(engine.getState());
 });
 
 // Initial render
