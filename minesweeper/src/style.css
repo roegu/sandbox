@@ -18,16 +18,49 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   padding: 24px;
+  max-width: 100vw;
+}
+
+.game-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #e94560;
+}
+
+.difficulty-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.difficulty-selector label {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.difficulty-selector select {
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
+.difficulty-selector select:focus {
+  border-color: #e94560;
 }
 
 .game-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: fit-content;
-  min-width: 200px;
+  min-width: 220px;
   background: #16213e;
   border: 2px solid #0f3460;
   border-radius: 8px;
@@ -72,6 +105,16 @@ body {
   color: #e94560;
 }
 
+.win-flash {
+  animation: winPulse 0.6s ease-in-out;
+}
+
+@keyframes winPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); color: #27ae60; }
+  100% { transform: scale(1); }
+}
+
 .board {
   display: grid;
   gap: 1px;
@@ -82,16 +125,16 @@ body {
 }
 
 .cell {
-  width: 32px;
-  height: 32px;
+  width: var(--cell-size, 32px);
+  height: var(--cell-size, 32px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: calc(var(--cell-size, 32px) * 0.5);
   font-weight: bold;
   cursor: pointer;
   border-radius: 2px;
-  transition: background-color 0.1s, transform 0.05s;
+  transition: background-color 0.1s ease, transform 0.05s ease;
 }
 
 .cell.hidden {
@@ -107,17 +150,33 @@ body {
 .cell.flagged {
   background-color: #16213e;
   border: 1px solid #1a1a4e;
-  font-size: 14px;
+  font-size: calc(var(--cell-size, 32px) * 0.45);
 }
 
 .cell.revealed {
-  background-color: #0a0a1a;
+  background-color: #0d1117;
   border: 1px solid #111;
   cursor: default;
+  animation: cellReveal 0.15s ease-out;
+}
+
+@keyframes cellReveal {
+  from { transform: scale(0.85); opacity: 0.5; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .cell.mine {
   background-color: #3d0000;
+}
+
+.cell.mine.explode {
+  animation: mineExplode 0.3s ease-out;
+}
+
+@keyframes mineExplode {
+  0% { transform: scale(0.5); background-color: #ff4444; }
+  50% { transform: scale(1.2); background-color: #cc0000; }
+  100% { transform: scale(1); background-color: #3d0000; }
 }
 
 .cell.cursor {
@@ -126,8 +185,52 @@ body {
   z-index: 1;
 }
 
-/* Number colors are set inline via JS, but ensure base styling */
-.cell.revealed[style*="color"] {
-  font-family: 'Courier New', monospace;
-  font-size: 15px;
+/* Scores panel */
+.scores-panel {
+  margin-top: 12px;
+  padding: 16px;
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 8px;
+  max-width: 300px;
+  width: 100%;
+}
+
+.scores-panel h3 {
+  font-size: 16px;
+  color: #e94560;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.scores-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.scores-table th {
+  color: #888;
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid #0f3460;
+  font-weight: 600;
+}
+
+.scores-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(15, 52, 96, 0.5);
+}
+
+.scores-table tr:first-child td {
+  color: #ffd700; /* Gold for #1 */
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .game-title { font-size: 22px; }
+  .game-header { padding: 6px 10px; gap: 12px; }
+  .mine-count, .timer { font-size: 18px; min-width: 36px; }
+  .face-btn { font-size: 24px; width: 36px; height: 36px; }
+  #app { padding: 12px; gap: 8px; }
 }
