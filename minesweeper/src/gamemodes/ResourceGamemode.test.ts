@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { GameEngine } from '../engine/GameEngine';
 import { ResourceGamemode } from './ResourceGamemode';
-import { CellState, GameStatus, PRESET_CONFIGS } from '../types';
+import { CellState, PRESET_CONFIGS } from '../types';
 
 describe('ResourceGamemode', () => {
   let engine: GameEngine;
@@ -52,7 +52,7 @@ describe('ResourceGamemode', () => {
       }
 
       if (energyCell) {
-        const energyBefore = engine.getState().resourceEnergy;
+        const energyBefore = engine.getState().resourceEnergy ?? 0;
         engine.reveal(energyCell.r, energyCell.c);
         const energyAfter = engine.getState().resourceEnergy;
 
