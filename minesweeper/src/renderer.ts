@@ -55,6 +55,7 @@ export class Renderer {
   private chainComboEl!: HTMLElement;
   private resourceEnergyBarEl!: HTMLElement;
   private _currentGrid: Cell[][] = [];
+  private _suppressTap = false;
 
   constructor(container: HTMLElement) {
     container.innerHTML = '';
@@ -537,6 +538,9 @@ export class Renderer {
 
   onCellClick(handler: (row: number, col: number) => void): void {
     const handleTap = (e: Event) => {
+      // Suppress tap after long-press (Android fires click even after preventDefault)
+      if (this._suppressTap) return;
+
       const target = e.target as HTMLElement;
       if (!target.dataset.row || !target.dataset.col) return;
       const row = Number(target.dataset.row);
@@ -588,6 +592,7 @@ export class Renderer {
           };
           pressTimer = setTimeout(() => {
             if (pressStart) {
+              this._suppressTap = true;
               handler(pressStart.row, pressStart.col);
               pressStart = null;
             }
@@ -601,6 +606,12 @@ export class Renderer {
         clearTimeout(pressTimer);
         pressTimer = null;
         pressStart = null;
+      }
+      // Reset suppress flag after a short delay so subsequent taps work
+      if (this._suppressTap) {
+        setTimeout(() => {
+          this._suppressTap = false;
+        }, 100);
       }
     });
 
