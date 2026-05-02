@@ -6,17 +6,26 @@ import { Renderer } from './renderer';
 import { CellState, PRESET_CONFIGS } from './types';
 import { GameEngine } from './engine/GameEngine';
 
+// Mock window.innerWidth to produce 32px cells with the viewport-based formula
+// For 8 cols: Math.floor((innerWidth - 48 - 7) / 8) = 32 → innerWidth ≈ 311
+// For 10 cols: Math.floor((innerWidth - 48 - 9) / 10) = 32 → innerWidth ≈ 369
+const MOCK_WIDTH_EASY = 311;
+const MOCK_WIDTH_MEDIUM = 377;
+
 describe('Renderer', () => {
   let container: HTMLDivElement;
   let renderer: Renderer;
   let engine: GameEngine;
 
-  function setup() {
+  function setup(width = MOCK_WIDTH_EASY) {
     container = document.createElement('div');
     container.id = 'app';
     document.body.appendChild(container);
+    (window as any).innerWidth = width;
     engine = new GameEngine(PRESET_CONFIGS.easy);
     renderer = new Renderer(container);
+    // In tests, always use desktop cell sizing (bypass mobile minimum)
+    (renderer as any).getMobileMinCellSize = () => 24;
   }
 
   beforeEach(() => {
@@ -159,9 +168,11 @@ describe('Renderer', () => {
 
   describe('difficulty switching', () => {
     it('rebuilds board with different dimensions for medium', () => {
+      (window as any).innerWidth = MOCK_WIDTH_MEDIUM;
       const mediumEngine = new GameEngine(PRESET_CONFIGS.medium);
       const mediumRenderer = new Renderer(document.createElement('div'));
       document.body.appendChild(mediumRenderer['boardEl'].parentElement!);
+      (mediumRenderer as any).getMobileMinCellSize = () => 24;
 
       mediumRenderer.render(mediumEngine.getState());
       const cells = mediumRenderer['boardEl'].querySelectorAll('.cell');

@@ -1,8 +1,6 @@
 import { CellState, GameStatus, Gamemode } from './types';
 import type { Cell, GameState, GameConfig, Card } from './types';
 
-const CELL_SIZE = 32;
-
 // Number colors matching classic Minesweeper
 const NUMBER_COLORS: Record<number, string> = {
   1: '#3498db',   // blue
@@ -265,10 +263,13 @@ export class Renderer {
   }
 
   private getMobileMinCellSize(): number {
-    // On touch devices, cells should be at least 44px for comfortable tapping
+    // On touch devices or small viewports, cells should be at least 44px for comfortable tapping
+    // Use viewport width as a reliable fallback since matchMedia can be unreliable
+    const vw = window.innerWidth;
+    if (vw <= 480) return 44; // mobile phones
     try {
-      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
-        return 44;
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        return 44; // touch devices (tablets, touch laptops)
       }
     } catch {
       // matchMedia not available (e.g. in tests)
@@ -278,10 +279,12 @@ export class Renderer {
 
   private buildBoard(rows: number, cols: number): void {
     this.boardEl.innerHTML = '';
-    // Responsive: use min for smaller screens
-    const maxBoardWidth = Math.min(window.innerWidth - 48, cols * CELL_SIZE + (cols - 1));
-    const cellSize = Math.floor(maxBoardWidth / cols);
-    const actualCellSize = Math.max(cellSize, this.getMobileMinCellSize());
+    // Calculate cell size: fit available width, but never below mobile minimum
+    const minCellSize = this.getMobileMinCellSize();
+    const gapTotal = cols - 1; // 1px gaps between cols
+    const availableWidth = window.innerWidth - 48;
+    const cellSize = Math.floor((availableWidth - gapTotal) / cols);
+    const actualCellSize = Math.max(cellSize, minCellSize);
 
     this.boardEl.style.gridTemplateColumns = `repeat(${cols}, ${actualCellSize}px)`;
     this.boardEl.style.gridTemplateRows = `repeat(${rows}, ${actualCellSize}px)`;
