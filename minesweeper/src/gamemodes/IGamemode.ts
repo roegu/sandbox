@@ -1,4 +1,4 @@
-import type { Cell, GameConfig } from '../types';
+import type { Cell, GameConfig, Gamemode } from '../types';
 
 /**
  * Interface for gamemode plugins. Each gamemode implements this to add
@@ -9,6 +9,8 @@ export interface IGamemode {
   readonly modeName: string;
   /** Display icon */
   readonly icon: string;
+  /** The Gamemode enum value */
+  getMode(): Gamemode;
   /** Initialize gamemode-specific state for a new board */
   init(grid: Cell[][]): void;
   /** Called after a cell is revealed (before mine-death check) */

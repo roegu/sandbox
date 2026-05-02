@@ -1,3 +1,4 @@
+import { Gamemode } from '../types';
 import type { Cell, GameConfig } from '../types';
 import type { IGamemode } from './IGamemode';
 
@@ -14,6 +15,8 @@ import type { IGamemode } from './IGamemode';
 export class ResourceGamemode implements IGamemode {
   readonly modeName = 'Resource Minesweeper';
   readonly icon = '⚡';
+
+  getMode(): Gamemode { return Gamemode.Resource; }
 
   private energy = 10;
   private revealCost = 1;

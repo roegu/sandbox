@@ -1,3 +1,4 @@
+import { Gamemode } from '../types';
 import type { Cell, GameConfig } from '../types';
 import type { IGamemode } from './IGamemode';
 
@@ -16,6 +17,8 @@ import type { IGamemode } from './IGamemode';
 export class ChainGamemode implements IGamemode {
   readonly modeName = 'Chain Minesweeper';
   readonly icon = '🔥';
+
+  getMode(): Gamemode { return Gamemode.Chain; }
 
   private combo = 0;
   private lastRevealTime = 0;

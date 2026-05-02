@@ -1,3 +1,4 @@
+import { Gamemode } from '../types';
 import type { Cell, GameConfig } from '../types';
 import type { IGamemode } from './IGamemode';
 
@@ -13,6 +14,8 @@ import type { IGamemode } from './IGamemode';
 export class ShadowGamemode implements IGamemode {
   readonly modeName = 'Shadow Minesweeper';
   readonly icon = '🌑';
+
+  getMode(): Gamemode { return Gamemode.Shadow; }
 
   private fogRadius = 2;
   private stealthCharges = 3;

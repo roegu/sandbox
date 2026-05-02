@@ -1,5 +1,6 @@
 import type { Cell, GameConfig, Card, CardEffect, CardRarity } from '../types';
 import { CardEffect as CE, CardRarity as CR } from '../types';
+import { Gamemode } from '../types';
 import type { IGamemode } from './IGamemode';
 
 // ─── Card Definitions ──────────────────────────────────────────────────────
@@ -30,6 +31,8 @@ const CARD_DEFS: CardDef[] = [
 export class ArcaneGamemode implements IGamemode {
   readonly modeName = 'Arcane Minesweeper';
   readonly icon = '🔮';
+
+  getMode(): Gamemode { return Gamemode.Arcane; }
 
   private deck: Card[] = [];
   private hand: Card[] = [];

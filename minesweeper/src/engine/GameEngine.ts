@@ -320,6 +320,7 @@ export class GameEngine {
 
   setGamemode(gamemode: IGamemode): void {
     this.gamemode = gamemode;
+    this.gamemodeConfig.mode = gamemode.getMode();
   }
 
   getGamemode(): IGamemode | null {
