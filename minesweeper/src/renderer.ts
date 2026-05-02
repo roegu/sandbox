@@ -51,6 +51,7 @@ export class Renderer {
   private gamemodeSelector!: HTMLSelectElement;
   private scoresPanel!: HTMLElement;
   private gamemodeInfoEl!: HTMLElement;
+  private gamemodeInstructionsEl!: HTMLElement;
   private arcaneHandEl!: HTMLElement;
   private resourceEnergyEl!: HTMLElement;
   private chainComboEl!: HTMLElement;
@@ -135,6 +136,10 @@ export class Renderer {
     this.gamemodeInfoEl = document.createElement('div');
     this.gamemodeInfoEl.className = 'gamemode-info';
 
+    // Gamemode instructions
+    this.gamemodeInstructionsEl = document.createElement('div');
+    this.gamemodeInstructionsEl.className = 'gamemode-instructions';
+
     // Arcane hand display
     this.arcaneHandEl = document.createElement('div');
     this.arcaneHandEl.className = 'arcane-hand';
@@ -172,6 +177,7 @@ export class Renderer {
     container.appendChild(header);
     container.appendChild(this.statusEl);
     container.appendChild(this.gamemodeInfoEl);
+    container.appendChild(this.gamemodeInstructionsEl);
     container.appendChild(this.arcaneHandEl);
     container.appendChild(this.resourceEnergyEl);
     container.appendChild(this.chainComboEl);
@@ -317,6 +323,15 @@ export class Renderer {
       [Gamemode.Chain]: '🔥 Chain Minesweeper',
     };
     this.gamemodeInfoEl.textContent = modeNames[state.gamemode] || 'Classic';
+
+    const instructions: Record<string, string> = {
+      [Gamemode.Classic]: 'Reveal all safe cells. Numbers show adjacent mines. Right-click to flag.',
+      [Gamemode.Arcane]: 'Reveal cells to draw cards! Use spells from your hand: Shield, Detonate, Scanner, Chain, Freeze, Magnet, Time Warp, Teleport.',
+      [Gamemode.Shadow]: 'Only cells near revealed tiles are visible. You have 3 stealth charges for safe reveals. Uncover the whole board to win.',
+      [Gamemode.Resource]: 'Reveals cost 1 energy, flags cost 2. ⚡ Energy cells restore 2 energy. Don\'t run out!',
+      [Gamemode.Chain]: 'Quick successive reveals build combos. x5 auto-flags, x10 chain-reveals, x15 blasts a 3×3 area.',
+    };
+    this.gamemodeInstructionsEl.textContent = instructions[state.gamemode] || '';
   }
 
   // ─── Arcane: Card Hand ─────────────────────────────────────────────────
