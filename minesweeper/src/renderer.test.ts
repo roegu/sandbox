@@ -6,26 +6,25 @@ import { Renderer } from './renderer';
 import { CellState, PRESET_CONFIGS } from './types';
 import { GameEngine } from './engine/GameEngine';
 
-// Mock window.innerWidth to produce 32px cells with the viewport-based formula
-// For 8 cols: Math.floor((innerWidth - 48 - 7) / 8) = 32 → innerWidth ≈ 311
-// For 10 cols: Math.floor((innerWidth - 48 - 9) / 10) = 32 → innerWidth ≈ 369
-const MOCK_WIDTH_EASY = 311;
-const MOCK_WIDTH_MEDIUM = 377;
+// Mock window.innerWidth for predictable cell sizing on desktop
+// For 8 cols at vw=600: Math.floor((600-48-7)/8) = 67, capped to 48
+// For 10 cols at vw=600: Math.floor((600-48-9)/10) = 54, capped to 48
+const MOCK_WIDTH_DESKTOP = 600;
 
 describe('Renderer', () => {
   let container: HTMLDivElement;
   let renderer: Renderer;
   let engine: GameEngine;
 
-  function setup(width = MOCK_WIDTH_EASY) {
+  function setup(width = MOCK_WIDTH_DESKTOP) {
     container = document.createElement('div');
     container.id = 'app';
     document.body.appendChild(container);
     (window as any).innerWidth = width;
+    // Mock matchMedia to simulate desktop in tests
+    (window as any).matchMedia = () => ({ matches: false });
     engine = new GameEngine(PRESET_CONFIGS.easy);
     renderer = new Renderer(container);
-    // In tests, always use desktop cell sizing (bypass mobile minimum)
-    (renderer as any).getMobileMinCellSize = () => 24;
   }
 
   beforeEach(() => {
@@ -53,8 +52,8 @@ describe('Renderer', () => {
       renderer.render(engine.getState());
       const board = container.querySelector('.board') as HTMLElement | null;
       const style = board?.style;
-      expect(style?.gridTemplateColumns).toBe('repeat(8, 32px)');
-      expect(style?.gridTemplateRows).toBe('repeat(8, 32px)');
+      expect(style?.gridTemplateColumns).toBe('repeat(8, 48px)');
+      expect(style?.gridTemplateRows).toBe('repeat(8, 48px)');
     });
 
     it('shows status message for idle game', () => {
@@ -168,19 +167,17 @@ describe('Renderer', () => {
 
   describe('difficulty switching', () => {
     it('rebuilds board with different dimensions for medium', () => {
-      (window as any).innerWidth = MOCK_WIDTH_MEDIUM;
       const mediumEngine = new GameEngine(PRESET_CONFIGS.medium);
       const mediumRenderer = new Renderer(document.createElement('div'));
       document.body.appendChild(mediumRenderer['boardEl'].parentElement!);
-      (mediumRenderer as any).getMobileMinCellSize = () => 24;
 
       mediumRenderer.render(mediumEngine.getState());
       const cells = mediumRenderer['boardEl'].querySelectorAll('.cell');
       expect(cells.length).toBe(120); // 12x10 medium
 
       const board = mediumRenderer['boardEl'];
-      expect(board.style.gridTemplateColumns).toBe('repeat(10, 32px)');
-      expect(board.style.gridTemplateRows).toBe('repeat(12, 32px)');
+      expect(board.style.gridTemplateColumns).toBe('repeat(10, 48px)');
+      expect(board.style.gridTemplateRows).toBe('repeat(12, 48px)');
     });
   });
 

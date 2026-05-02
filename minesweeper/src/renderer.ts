@@ -262,29 +262,21 @@ export class Renderer {
     }
   }
 
-  private getMobileMinCellSize(): number {
-    // On touch devices or small viewports, cells should be at least 44px for comfortable tapping
-    // Use viewport width as a reliable fallback since matchMedia can be unreliable
-    const vw = window.innerWidth;
-    if (vw <= 480) return 44; // mobile phones
-    try {
-      if (window.matchMedia('(pointer: coarse)').matches) {
-        return 44; // touch devices (tablets, touch laptops)
-      }
-    } catch {
-      // matchMedia not available (e.g. in tests)
-    }
-    return 24;
-  }
-
   private buildBoard(rows: number, cols: number): void {
     this.boardEl.innerHTML = '';
-    // Calculate cell size: fit available width, but never below mobile minimum
-    const minCellSize = this.getMobileMinCellSize();
-    const gapTotal = cols - 1; // 1px gaps between cols
+    // Calculate cell size: fit available width, bounded by min and max
+    const vw = window.innerWidth;
+    let isMobile = vw <= 480;
+    try {
+      if (window.matchMedia('(pointer: coarse)').matches) isMobile = true;
+    } catch { /* tests */ }
+
+    const minCellSize = isMobile ? 44 : 24;
+    const maxCellSize = isMobile ? 60 : 48; // cap to prevent huge cells on big screens
+    const gapTotal = cols - 1;
     const availableWidth = window.innerWidth - 48;
     const cellSize = Math.floor((availableWidth - gapTotal) / cols);
-    const actualCellSize = Math.max(cellSize, minCellSize);
+    const actualCellSize = Math.min(Math.max(cellSize, minCellSize), maxCellSize);
 
     this.boardEl.style.gridTemplateColumns = `repeat(${cols}, ${actualCellSize}px)`;
     this.boardEl.style.gridTemplateRows = `repeat(${rows}, ${actualCellSize}px)`;
