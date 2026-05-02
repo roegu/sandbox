@@ -56,6 +56,7 @@ export class Renderer {
   private resourceEnergyEl!: HTMLElement;
   private chainComboEl!: HTMLElement;
   private resourceEnergyBarEl!: HTMLElement;
+  private _currentGrid: Cell[][] = [];
 
   constructor(container: HTMLElement) {
     container.innerHTML = '';
@@ -230,6 +231,9 @@ export class Renderer {
     this.renderShadowFog(state);
 
     // ─── Board ───────────────────────────────────────────────────────────
+    // Store grid for click handler (needed to detect flagged cells on mobile)
+    this._currentGrid = state.grid;
+
     // Rebuild board if dimensions changed
     const expectedCells = rows * cols;
     if (this.boardEl.children.length !== expectedCells) {
@@ -260,12 +264,24 @@ export class Renderer {
     }
   }
 
+  private getMobileMinCellSize(): number {
+    // On touch devices, cells should be at least 44px for comfortable tapping
+    try {
+      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        return 44;
+      }
+    } catch {
+      // matchMedia not available (e.g. in tests)
+    }
+    return 24;
+  }
+
   private buildBoard(rows: number, cols: number): void {
     this.boardEl.innerHTML = '';
     // Responsive: use min for smaller screens
     const maxBoardWidth = Math.min(window.innerWidth - 48, cols * CELL_SIZE + (cols - 1));
     const cellSize = Math.floor(maxBoardWidth / cols);
-    const actualCellSize = Math.max(cellSize, 24); // minimum 24px
+    const actualCellSize = Math.max(cellSize, this.getMobileMinCellSize());
 
     this.boardEl.style.gridTemplateColumns = `repeat(${cols}, ${actualCellSize}px)`;
     this.boardEl.style.gridTemplateRows = `repeat(${rows}, ${actualCellSize}px)`;
@@ -528,7 +544,14 @@ export class Renderer {
     const handleTap = (e: Event) => {
       const target = e.target as HTMLElement;
       if (!target.dataset.row || !target.dataset.col) return;
-      handler(Number(target.dataset.row), Number(target.dataset.col));
+      const row = Number(target.dataset.row);
+      const col = Number(target.dataset.col);
+
+      // Skip if cell is already flagged (prevents reveal after long-press flag on mobile)
+      const cell = this._currentGrid[row]?.[col];
+      if (cell?.state === CellState.Flagged) return;
+
+      handler(row, col);
     };
 
     // Support both click and touch events
