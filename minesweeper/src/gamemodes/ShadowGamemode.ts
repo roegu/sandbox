@@ -3,13 +3,12 @@ import type { Cell, GameConfig } from '../types';
 import type { IGamemode } from './IGamemode';
 
 /**
- * Shadow Minesweeper — Fog of War + Stealth
+ * Shadow Minesweeper — Fog of War
  *
  * Inspired by board games like XCOM and Descent.
  * - Only cells within `fogRadius` of any revealed cell are visible
  * - Hidden cells in fog show as "?" with reduced opacity
  * - Shadow mines don't contribute to adjacent mine counts
- * - You get `stealthCharges` to reveal cells without triggering adjacent counts
  */
 export class ShadowGamemode implements IGamemode {
   readonly modeName = 'Shadow Minesweeper';
@@ -18,14 +17,13 @@ export class ShadowGamemode implements IGamemode {
   getMode(): Gamemode { return Gamemode.Shadow; }
 
   private fogRadius = 2;
-  private stealthCharges = 3;
   private fogMask!: boolean[][];
 
   init(grid: Cell[][]): void {
     const rows = grid.length;
     const cols = grid[0].length;
     this.fogMask = Array.from({ length: rows }, () => Array(cols).fill(false));
-    // Initially reveal cells around (0, 0)
+    // Initially reveal cells around (0, 0) so the player has somewhere to start
     this.updateFogForCell(0, 0, grid);
   }
 
@@ -39,33 +37,18 @@ export class ShadowGamemode implements IGamemode {
   }
 
   onNewGame(_config: GameConfig): void {
-    this.stealthCharges = 3;
+    // Nothing to reset — fog mask is recreated in init()
   }
 
   getState(): Record<string, unknown> {
     return {
       shadowFogMask: this.fogMask,
-      shadowStealthCharges: this.stealthCharges,
     };
   }
 
   /** Returns whether a cell is currently visible (not in fog) */
   isVisible(row: number, col: number): boolean {
     return this.fogMask[row]?.[col] ?? false;
-  }
-
-  /** Returns the number of remaining stealth charges */
-  getStealthCharges(): number {
-    return this.stealthCharges;
-  }
-
-  /** Spend a stealth charge — returns true if successful */
-  useStealthCharge(): boolean {
-    if (this.stealthCharges > 0) {
-      this.stealthCharges--;
-      return true;
-    }
-    return false;
   }
 
   // ─── Fog Logic ───────────────────────────────────────────────────────

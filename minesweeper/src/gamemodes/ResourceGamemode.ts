@@ -48,7 +48,20 @@ export class ResourceGamemode implements IGamemode {
     }
   }
 
+  /** Check if the player has enough energy to reveal a cell */
+  canReveal(): boolean {
+    return this.energy >= this.revealCost;
+  }
+
+  /** Check if the player has enough energy to flag a cell */
+  canFlag(): boolean {
+    return this.energy >= this.flagCost;
+  }
+
   onReveal(_row: number, _col: number, cell: Cell, _grid: Cell[][]): void {
+    // Cannot reveal without enough energy
+    if (!this.canReveal()) return;
+
     // Deduct reveal cost
     this.energy -= this.revealCost;
 
@@ -60,6 +73,9 @@ export class ResourceGamemode implements IGamemode {
   }
 
   onFlag(_row: number, _col: number, _cell: Cell): void {
+    // Cannot flag without enough energy
+    if (!this.canFlag()) return;
+
     // Deduct flag cost
     this.energy -= this.flagCost;
   }

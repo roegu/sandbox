@@ -89,6 +89,7 @@ describe('Renderer', () => {
     });
 
     it('updates cursor highlight on player position change', () => {
+      renderer.setKeyboardActive(true);
       engine.moveCursor('right');
       engine.moveCursor('right');
       renderer.render(engine.getState());

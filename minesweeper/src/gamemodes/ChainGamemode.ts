@@ -7,11 +7,11 @@ import type { IGamemode } from './IGamemode';
  *
  * Inspired by rhythm games and TCG combo chains.
  * - Revealing cells in quick succession builds a combo counter
- * - Combo resets after 3 seconds of inactivity or hitting a mine
+ * - Combo resets after 2 seconds of inactivity or hitting a mine
  * - Combo bonuses:
- *   - 5x: Auto-flag adjacent mines on next reveal
- *   - 10x: Chain reveal (reveal all connected zeros)
- *   - 15x: Reveal all cells in a 3x3 area
+ *   - 3x: Auto-flag adjacent mines on next reveal
+ *   - 5x: Chain reveal (reveal all connected zeros)
+ *   - 8x: Reveal all cells in a 3x3 area
  * - Higher combo = more cells revealed per click
  */
 export class ChainGamemode implements IGamemode {
@@ -23,10 +23,10 @@ export class ChainGamemode implements IGamemode {
   private combo = 0;
   private lastRevealTime = 0;
   private chainCellsRevealed = 0;
-  private comboTimeout = 3000; // 3 seconds
-  private autoFlagThreshold = 5;
-  private chainRevealThreshold = 10;
-  private blastThreshold = 15;
+  private comboTimeout = 2000; // 2 seconds
+  private autoFlagThreshold = 3;
+  private chainRevealThreshold = 5;
+  private blastThreshold = 8;
 
   init(_grid: Cell[][]): void {
     this.combo = 0;
@@ -54,15 +54,15 @@ export class ChainGamemode implements IGamemode {
 
     // Apply combo bonuses
     if (this.combo >= this.blastThreshold) {
-      // 15x: Blast — reveal 3x3 area
+      // 8x: Blast — reveal 3x3 area
       this.blast(row, col, grid);
       this.combo = 0; // Reset after blast
       this.chainCellsRevealed = 0;
     } else if (this.combo >= this.chainRevealThreshold) {
-      // 10x: Chain reveal
+      // 5x: Chain reveal
       this.chainReveal(row, col, grid);
     } else if (this.combo >= this.autoFlagThreshold) {
-      // 5x: Auto-flag adjacent mines
+      // 3x: Auto-flag adjacent mines
       this.autoFlagAdjacentMines(row, col, grid);
     }
 

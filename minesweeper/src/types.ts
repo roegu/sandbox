@@ -88,7 +88,6 @@ export interface GamemodeConfig {
   arcaneHandLimit?: number;
   // Shadow
   shadowFogRadius?: number;
-  shadowStealthCharges?: number;
   // Resource
   resourceStartEnergy?: number;
   resourceRevealCost?: number;
@@ -113,11 +112,7 @@ export const CardEffect = {
   Shield: 'shield',
   Detonate: 'detonate',
   Scanner: 'scanner',
-  Freeze: 'freeze',
-  ChainReveal: 'chainReveal',
-  Magnet: 'magnet',
-  TimeWarp: 'timeWarp',
-  Teleport: 'teleport',
+  Chain: 'chain',
 } as const;
 export type CardEffect = (typeof CardEffect)[keyof typeof CardEffect];
 
@@ -141,7 +136,6 @@ export interface Cell {
   isEnergyCell?: boolean;
   isShadowMine?: boolean;
   shielded?: boolean;
-  frozen?: boolean;
 }
 
 export interface GameState {
@@ -163,7 +157,6 @@ export interface GameState {
   arcanePendingCard?: Card | null;
   // Shadow
   shadowFogMask?: boolean[][];
-  shadowStealthCharges?: number;
   // Resource
   resourceEnergy?: number;
   resourceEnergyCellsRevealed?: number;

@@ -96,8 +96,11 @@ describe('ResourceGamemode', () => {
 
   describe('game integration', () => {
     it('newGame resets energy', () => {
-      engine.reveal(0, 0);
-      expect(engine.getState().resourceEnergy).toBe(9);
+      // Drain energy by flagging a cell (costs 2, always)
+      engine.toggleFlag(0, 0);
+      const energyAfterFlag = engine.getState().resourceEnergy;
+      // Energy should be less than starting (10), regardless of what cell type (0,0) was
+      expect(energyAfterFlag).toBeLessThan(10);
 
       engine.newGame();
       expect(engine.getState().resourceEnergy).toBe(10);

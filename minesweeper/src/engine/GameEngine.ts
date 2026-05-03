@@ -169,10 +169,9 @@ export class GameEngine {
     }
 
     if (cell.isMine) {
-      // Check for gamemode protection (Shield / Freeze)
-      if (cell.shielded || cell.frozen) {
+      // Check for gamemode protection (Shield)
+      if (cell.shielded) {
         cell.shielded = false;
-        cell.frozen = false;
         cell.isMine = false; // Remove the mine
         cell.state = CellState.Revealed;
         this.cellsRevealed++;

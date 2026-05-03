@@ -55,6 +55,7 @@ export class Renderer {
   private chainComboEl!: HTMLElement;
   private resourceEnergyBarEl!: HTMLElement;
   private _currentGrid: Cell[][] = [];
+  private _keyboardActive = false;
 
   constructor(container: HTMLElement) {
     container.innerHTML = '';
@@ -248,12 +249,12 @@ export class Renderer {
       }
     }
 
-    // Update cursor highlight
+    // Update cursor highlight (only when keyboard is active)
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const index = r * cols + c;
         const cellEl = this.boardEl.children[index] as HTMLElement;
-        if (r === state.playerPos.row && c === state.playerPos.col) {
+        if (this._keyboardActive && r === state.playerPos.row && c === state.playerPos.col) {
           cellEl.classList.add('cursor');
         } else {
           cellEl.classList.remove('cursor');
@@ -337,10 +338,10 @@ export class Renderer {
 
     const instructions: Record<string, string> = {
       [Gamemode.Classic]: 'Tap to reveal. Long-press to flag. Numbers show adjacent mines.',
-      [Gamemode.Arcane]: 'Tap to reveal and draw cards! Use spells from your hand: Shield, Detonate, Scanner, Chain, Freeze, Magnet, Time Warp, Teleport.',
-      [Gamemode.Shadow]: 'Only cells near revealed tiles are visible. You have 3 stealth charges for safe reveals. Uncover the whole board to win.',
-      [Gamemode.Resource]: 'Reveals cost 1 energy, flags cost 2. ⚡ Energy cells restore 2 energy. Don\'t run out!',
-      [Gamemode.Chain]: 'Quick successive reveals build combos. x5 auto-flags, x10 chain-reveals, x15 blasts a 3×3 area.',
+      [Gamemode.Arcane]: 'Tap to reveal and draw cards. Each card triggers automatically: Shield protects one hit, Detonate reveals neighbors, Scanner finds a safe cell, Chain clears zeros.',
+      [Gamemode.Shadow]: 'Only cells near revealed tiles are visible. Tap to reveal and expand the fog.',
+      [Gamemode.Resource]: 'Reveals cost 1 energy, flags cost 2. ⚡ Energy cells restore 2 energy. You cannot reveal or flag without enough energy — actions are blocked when energy is too low. Don\'t run out!',
+      [Gamemode.Chain]: 'Quick successive reveals build combos. 3x auto-flags, 5x clears zeros, 8x blasts a 3×3 area.',
     };
     this.gamemodeInstructionsEl.textContent = instructions[state.gamemode] || '';
   }
@@ -396,10 +397,23 @@ export class Renderer {
     // Color based on energy level
     if (energy <= 2) {
       this.resourceEnergyBarEl.style.background = '#e74c3c';
-    } else if (energy <= 5) {
-      this.resourceEnergyBarEl.style.background = '#f39c12';
+      // Show low energy warning
+      let warningEl = this.resourceEnergyEl.querySelector('.energy-warning') as HTMLElement;
+      if (!warningEl) {
+        warningEl = document.createElement('span');
+        warningEl.className = 'energy-warning';
+        warningEl.style.color = '#e74c3c';
+        warningEl.style.fontSize = '0.75rem';
+        warningEl.style.fontWeight = 'bold';
+        warningEl.textContent = '⚠ LOW ENERGY!';
+        this.resourceEnergyEl.appendChild(warningEl);
+      }
+      warningEl.style.display = 'inline';
     } else {
-      this.resourceEnergyBarEl.style.background = '#27ae60';
+      // Hide warning if energy is sufficient
+      const warningEl = this.resourceEnergyEl.querySelector('.energy-warning') as HTMLElement | null;
+      if (warningEl) warningEl.style.display = 'none';
+      this.resourceEnergyBarEl.style.background = energy <= 5 ? '#f39c12' : '#27ae60';
     }
   }
 
@@ -419,9 +433,15 @@ export class Renderer {
     }
 
     this.chainComboEl.innerHTML = `🔥 Combo x${combo}`;
-    const multiplier = combo >= 15 ? '🌟 BLAST!' : combo >= 10 ? '⛓ Chain!' : combo >= 5 ? '🧲 Flag!' : '';
-    if (multiplier) {
-      this.chainComboEl.innerHTML += ` <span class="combo-bonus">${multiplier}</span>`;
+    // Show next threshold bonus
+    if (combo >= 8) {
+      this.chainComboEl.innerHTML += ` <span class="combo-bonus">🌟 BLAST!</span>`;
+    } else if (combo >= 5) {
+      this.chainComboEl.innerHTML += ` <span class="combo-bonus">⛓ Chain!</span>`;
+    } else if (combo >= 3) {
+      this.chainComboEl.innerHTML += ` <span class="combo-bonus">🧲 Flag!</span>`;
+    } else {
+      this.chainComboEl.innerHTML += ` <span class="combo-bonus" style="opacity:0.5">Next: 3x Flag!</span>`;
     }
   }
 
@@ -535,9 +555,14 @@ export class Renderer {
     this.scoresPanel.style.display = 'none';
   }
 
+  setKeyboardActive(active: boolean): void {
+    this._keyboardActive = active;
+  }
+
   onCellClick(handler: (row: number, col: number) => void): void {
     // Desktop: click
     this.boardEl.addEventListener('click', (e) => {
+      this._keyboardActive = false;
       const target = e.target as HTMLElement;
       if (!target.dataset.row || !target.dataset.col) return;
       const row = Number(target.dataset.row);
@@ -565,6 +590,7 @@ export class Renderer {
 
     this.boardEl.addEventListener('pointerup', (e) => {
       if (pointerDownInfo && (e.pointerType === 'touch' || e.pointerType === 'pen')) {
+        this._keyboardActive = false;
         // Only reveal for short taps (<=500ms)
         if (Date.now() - pointerDownInfo.startTime <= 500) {
           handler(pointerDownInfo.row, pointerDownInfo.col);
@@ -581,6 +607,7 @@ export class Renderer {
   onCellRightClick(handler: (row: number, col: number) => void): void {
     // Desktop: right-click
     this.boardEl.addEventListener('contextmenu', (e) => {
+      this._keyboardActive = false;
       e.preventDefault();
       const target = e.target as HTMLElement;
       if (!target.dataset.row || !target.dataset.col) return;
@@ -605,6 +632,7 @@ export class Renderer {
 
     this.boardEl.addEventListener('pointerup', (e) => {
       if (pointerDownInfo && (e.pointerType === 'touch' || e.pointerType === 'pen')) {
+        this._keyboardActive = false;
         // Flag only for long presses (>500ms)
         if (Date.now() - pointerDownInfo.startTime > 500) {
           handler(pointerDownInfo.row, pointerDownInfo.col);

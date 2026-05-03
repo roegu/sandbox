@@ -77,26 +77,32 @@ describe('ChainGamemode', () => {
       }
     });
 
-    it('reaches 10x combo threshold', () => {
-      let revealed = 0;
-      while (gamemode.getCombo() < 10 && revealed < 64) {
-        const grid = engine.getState().grid;
-        let found = false;
-        for (let r = 0; r < grid.length && !found; r++) {
-          for (let c = 0; c < grid[r].length && !found; c++) {
-            if (!grid[r][c].isMine && grid[r][c].state === CellState.Hidden) {
-              engine.reveal(r, c);
-              found = true;
-            }
+    it('reaches 8x blast threshold', () => {
+      // Build up combo by revealing safe cells in quick succession
+      let comboCount = 0;
+      const grid = engine.getState().grid;
+      const safeCells: { r: number; c: number }[] = [];
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[r].length; c++) {
+          if (!grid[r][c].isMine && grid[r][c].state === CellState.Hidden) {
+            safeCells.push({ r, c });
           }
         }
-        revealed++;
-        if (!found) break;
       }
 
-      if (gamemode.getCombo() > 0) {
-        expect(gamemode.getCombo()).toBeGreaterThanOrEqual(10);
+      // Collect safe cells first, then reveal them all at once
+      const toReveal = safeCells.slice(0, 8);
+      for (const cell of toReveal) {
+        engine.reveal(cell.r, cell.c);
+        comboCount++;
       }
+
+      // Blast should have triggered at 8x and reset combo
+      expect(gamemode.getCombo()).toBe(0);
+
+      // Verify blast revealed extra cells (3x3 area)
+      const cellsRevealed = engine.getState().cellsRevealed;
+      expect(cellsRevealed).toBeGreaterThan(8);
     });
   });
 

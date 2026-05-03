@@ -156,7 +156,7 @@ document.addEventListener('keydown', (e) => {
 
   // Toggle scores on H key
   if (e.key === 'h' || e.key === 'H') {
-    if (renderer['scoresPanel'].style.display === 'none') {
+    if ((renderer as any)['scoresPanel'].style.display === 'none') {
       renderer.renderScores(currentDifficulty);
     } else {
       renderer.hideScores();
@@ -166,10 +166,11 @@ document.addEventListener('keydown', (e) => {
 
   if (state.status === GameStatus.Won || state.status === GameStatus.Lost) return;
 
-  // Cursor movement
+  // Cursor movement — activate cursor highlight
   const direction = KEY_DIRECTION_MAP[e.key];
   if (direction) {
     e.preventDefault();
+    renderer.setKeyboardActive(true);
     engine.moveCursor(direction);
     renderer.render(engine.getState());
     return;
@@ -178,6 +179,7 @@ document.addEventListener('keydown', (e) => {
   // Reveal with Space or Enter
   if (e.key === ' ' || e.key === 'Enter') {
     e.preventDefault();
+    renderer.setKeyboardActive(true);
     const pos = state.playerPos;
     handleReveal(pos.row, pos.col);
     return;
@@ -186,6 +188,7 @@ document.addEventListener('keydown', (e) => {
   // Flag with F key
   if (e.key === 'f' || e.key === 'F') {
     e.preventDefault();
+    renderer.setKeyboardActive(true);
     const pos = state.playerPos;
     handleFlag(pos.row, pos.col);
     return;

@@ -62,34 +62,6 @@ describe('ShadowGamemode', () => {
     });
   });
 
-  describe('stealth charges', () => {
-    it('starts with 3 stealth charges', () => {
-      expect(gamemode.getStealthCharges()).toBe(3);
-    });
-
-    it('can spend stealth charges', () => {
-      expect(gamemode.useStealthCharge()).toBe(true);
-      expect(gamemode.getStealthCharges()).toBe(2);
-    });
-
-    it('cannot spend beyond limit', () => {
-      gamemode.useStealthCharge();
-      gamemode.useStealthCharge();
-      gamemode.useStealthCharge();
-      expect(gamemode.useStealthCharge()).toBe(false);
-      expect(gamemode.getStealthCharges()).toBe(0);
-    });
-
-    it('resets on new game', () => {
-      gamemode.useStealthCharge();
-      gamemode.useStealthCharge();
-      expect(gamemode.getStealthCharges()).toBe(1);
-
-      engine.newGame();
-      expect(gamemode.getStealthCharges()).toBe(3);
-    });
-  });
-
   describe('game integration', () => {
     it('can win with gamemode active', () => {
       const tinyEngine = new GameEngine({ rows: 3, cols: 3, mines: 1 });
