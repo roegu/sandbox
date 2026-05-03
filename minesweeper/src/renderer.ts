@@ -536,52 +536,45 @@ export class Renderer {
   }
 
   onCellClick(handler: (row: number, col: number) => void): void {
-    const handleTap = (e: Event) => {
+    // Desktop: click
+    this.boardEl.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       if (!target.dataset.row || !target.dataset.col) return;
       const row = Number(target.dataset.row);
       const col = Number(target.dataset.col);
-
-      // Skip if cell is already flagged
       const cell = this._currentGrid[row]?.[col];
       if (cell?.state === CellState.Flagged) return;
-
       handler(row, col);
-    };
+    });
 
-    // Desktop: click
-    this.boardEl.addEventListener('click', handleTap);
+    // Mobile: pointer events (no click race condition)
+    let pointerDownInfo: { row: number; col: number; startTime: number } | null = null;
 
-    // Mobile: record touch start for duration check
-    let touchStartInfo: { row: number; col: number; startTime: number } | null = null;
-
-    this.boardEl.addEventListener('touchstart', (e) => {
-      if (e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
+    this.boardEl.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+        const target = e.target as HTMLElement;
         if (target && target.dataset.row && target.dataset.col) {
-          touchStartInfo = {
+          pointerDownInfo = {
             row: Number(target.dataset.row),
             col: Number(target.dataset.col),
             startTime: Date.now(),
           };
         }
       }
-    }, { passive: true });
+    });
 
-    this.boardEl.addEventListener('touchend', (e) => {
-      if (touchStartInfo && e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
-        if (target && target.dataset.row && target.dataset.col) {
-          e.preventDefault();
-          // Only reveal if it's a short tap (<=500ms), not a long press
-          if (Date.now() - touchStartInfo.startTime <= 500) {
-            handleTap(e);
-          }
+    this.boardEl.addEventListener('pointerup', (e) => {
+      if (pointerDownInfo && (e.pointerType === 'touch' || e.pointerType === 'pen')) {
+        // Only reveal for short taps (<=500ms)
+        if (Date.now() - pointerDownInfo.startTime <= 500) {
+          handler(pointerDownInfo.row, pointerDownInfo.col);
         }
+        pointerDownInfo = null;
       }
-      touchStartInfo = null;
+    });
+
+    this.boardEl.addEventListener('pointermove', () => {
+      pointerDownInfo = null;
     });
   }
 
@@ -594,33 +587,34 @@ export class Renderer {
       handler(Number(target.dataset.row), Number(target.dataset.col));
     });
 
-    // Mobile: check duration at touchend (no timer)
-    let touchStartInfo: { row: number; col: number; startTime: number } | null = null;
+    // Mobile: pointer events (no click race condition)
+    let pointerDownInfo: { row: number; col: number; startTime: number } | null = null;
 
-    this.boardEl.addEventListener('touchstart', (e) => {
-      if (e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
+    this.boardEl.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+        const target = e.target as HTMLElement;
         if (target && target.dataset.row && target.dataset.col) {
-          touchStartInfo = {
+          pointerDownInfo = {
             row: Number(target.dataset.row),
             col: Number(target.dataset.col),
             startTime: Date.now(),
           };
         }
       }
-    }, { passive: true });
-
-    this.boardEl.addEventListener('touchend', () => {
-      if (touchStartInfo && Date.now() - touchStartInfo.startTime > 500) {
-        handler(touchStartInfo.row, touchStartInfo.col);
-      }
-      touchStartInfo = null;
     });
 
-    this.boardEl.addEventListener('touchmove', () => {
-      // Cancel long-press if user moves finger
-      touchStartInfo = null;
+    this.boardEl.addEventListener('pointerup', (e) => {
+      if (pointerDownInfo && (e.pointerType === 'touch' || e.pointerType === 'pen')) {
+        // Flag only for long presses (>500ms)
+        if (Date.now() - pointerDownInfo.startTime > 500) {
+          handler(pointerDownInfo.row, pointerDownInfo.col);
+        }
+        pointerDownInfo = null;
+      }
+    });
+
+    this.boardEl.addEventListener('pointermove', () => {
+      pointerDownInfo = null;
     });
   }
 }
