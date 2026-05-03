@@ -55,7 +55,7 @@ export class Renderer {
   private chainComboEl!: HTMLElement;
   private resourceEnergyBarEl!: HTMLElement;
   private _currentGrid: Cell[][] = [];
-  private _suppressTap = false;
+  private _lastLongPressTime = 0;
 
   constructor(container: HTMLElement) {
     container.innerHTML = '';
@@ -538,8 +538,8 @@ export class Renderer {
 
   onCellClick(handler: (row: number, col: number) => void): void {
     const handleTap = (e: Event) => {
-      // Suppress tap after long-press (Android fires click even after preventDefault)
-      if (this._suppressTap) return;
+      // Suppress tap/click events within 1s of a long-press (Android fires click after touchend)
+      if (Date.now() - this._lastLongPressTime < 1000) return;
 
       const target = e.target as HTMLElement;
       if (!target.dataset.row || !target.dataset.col) return;
@@ -592,7 +592,7 @@ export class Renderer {
           };
           pressTimer = setTimeout(() => {
             if (pressStart) {
-              this._suppressTap = true;
+              this._lastLongPressTime = Date.now();
               handler(pressStart.row, pressStart.col);
               pressStart = null;
             }
@@ -606,12 +606,6 @@ export class Renderer {
         clearTimeout(pressTimer);
         pressTimer = null;
         pressStart = null;
-      }
-      // Reset suppress flag after a short delay so subsequent taps work
-      if (this._suppressTap) {
-        setTimeout(() => {
-          this._suppressTap = false;
-        }, 100);
       }
     });
 
