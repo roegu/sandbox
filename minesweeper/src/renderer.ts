@@ -539,12 +539,8 @@ export class Renderer {
     const playerSelected = wmState.wardMazePlayerSelected ?? false;
 
     if (!playerPos || !goalPos || wards.length === 0) {
-      this.wardMazeMovesEl.textContent = `Moves: ${moves} [STATE MISSING]`;
       return;
     }
-
-    // Debug: show player/goal/ward positions
-    this.wardMazeMovesEl.textContent = `Moves: ${moves} | P:${playerPos.row},${playerPos.col} G:${goalPos.row},${goalPos.col} W:${wards.map(w => `${w.row},${w.col}`).join(',')}`;
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
