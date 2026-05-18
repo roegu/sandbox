@@ -543,6 +543,9 @@ export class Renderer {
       return;
     }
 
+    // Debug: show player/goal/ward positions
+    this.wardMazeMovesEl.textContent = `Moves: ${moves} | P:${playerPos.row},${playerPos.col} G:${goalPos.row},${goalPos.col} W:${wards.map(w => `${w.row},${w.col}`).join(',')}`;
+
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const index = r * cols + c;
