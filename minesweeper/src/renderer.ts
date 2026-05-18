@@ -254,7 +254,6 @@ export class Renderer {
     this.renderResourceEnergy(state);
     this.renderChainCombo(state);
     this.renderShadowFog(state);
-    this.renderWardMaze(state);
 
     // ─── Board ───────────────────────────────────────────────────────────
     // Store grid for click handler (needed to detect flagged cells on mobile)
@@ -288,6 +287,9 @@ export class Renderer {
         }
       }
     }
+
+    // ─── WardMaze overlays (must run AFTER updateCell to not be clobbered) ──
+    this.renderWardMaze(state);
   }
 
   private buildBoard(rows: number, cols: number): void {
