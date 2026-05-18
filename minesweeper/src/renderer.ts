@@ -538,6 +538,11 @@ export class Renderer {
     const selectedWardIdx = wmState.wardMazeSelectedWardIndex;
     const playerSelected = wmState.wardMazePlayerSelected ?? false;
 
+    if (!playerPos || !goalPos || wards.length === 0) {
+      console.warn('WardMaze state missing:', { playerPos, goalPos, wardsLen: wards.length });
+      return;
+    }
+
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const index = r * cols + c;
